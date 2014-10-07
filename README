@@ -1,0 +1,29 @@
+Startup sources for your PeteTwitt App using SQLLITE
+
+1. Install apache as indicated in the handout.
+
+2. Install in your home directory in data
+
+  tar -xvf PictureShareDB.tar
+
+3. Create data base
+
+ cd PictureShareDB
+ ./CreateDatabase.py
+ ./populate.py
+ ./query.py
+
+2. To install cgi
+
+ cd ~/apache/htdocs
+ ln -s ~/PictureShareDB/cgi PictureShareDB
+ ls PictureShareDB
+
+3. In cgi/login.cgi look for the line MYLOGIN and write your login.
+
+4. To run PictureShare app type hostname:port in a browser
+
+Users:
+
+george@gmail.com abc123
+mary@gmail.com mary123

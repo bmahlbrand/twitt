@@ -1,0 +1,18 @@
+create user:
+	add to db
+	validate email
+	input validation
+	upload prof pic
+
+manage account:
+	search subs
+	add sub
+	remove sub
+	change picture
+	change password
+
+main page:
+	refresh
+	login
+	manage account
+	display tweet/prof pic in order of time stamps

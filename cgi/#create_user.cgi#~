@@ -1,0 +1,14 @@
+import smtplib 
+from email.mime.text import MIMEText
+
+fp(registration_confirmation, 'rb')
+msg = MIMEText(fp.read())
+fp.close()
+
+msg['Subject'] = 'The contents of %s' % registration_confirmation
+msg['From'] = me
+msg['To'] = you
+
+s = smtplib.SMTP('localhost')
+s.sendmail(me, [you], msg.as_string())
+s.quit()

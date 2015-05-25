@@ -9,7 +9,7 @@ def populate():
 	print ("Run only once or you will get error for duplicates")
 	print 
 
-	conn = sqlite3.connect('DB/flaskr.db')
+	conn = sqlite3.connect('DB/twittr.db')
 	c = conn.cursor()
 	# Add one user
 	# user=('dave@gmail.com','David','Blaine', 'dave123')

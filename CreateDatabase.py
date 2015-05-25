@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import sqlite3
-conn = sqlite3.connect('DB/flaskr.db')
+conn = sqlite3.connect('DB/twittr.db')
 
 c = conn.cursor()
 

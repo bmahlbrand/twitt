@@ -7,12 +7,8 @@ import sqlite3
 import session
 from datetime import datetime
 
-
-#Get Databasedir
-MYLOGIN="bahlbran"
-DATABASE="/homes/"+MYLOGIN+"/DB/petetwitt.db"
-IMAGEPATH="/homes/"+MYLOGIN+"/PeteTwitt/images"
-
+DATABASE="DB/twittr.db"
+IMAGEPATH="IMAGES"
 #############################################################
 # Define main user page
 
@@ -72,9 +68,8 @@ def display(username, session):
 
        #print(html.format(name=row[0]))
 	conn.close();
-   
-  
-   ##############################################################
+
+##############################################################
 # Define main function.
 def main():
 	form = cgi.FieldStorage()
@@ -93,10 +88,3 @@ def main():
 ###############################################################
 # Call main function.
 main()
-   
-   
-   
-   
-   
-   
-   

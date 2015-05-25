@@ -6,7 +6,7 @@ import sqlite3
 import session
 
 DATABASE="DB/twittr.db"
-IMAGEPATH="images"
+IMAGEPATH="IMAGES"
 ###############################
 # display main
 def options(username,session):
@@ -162,43 +162,7 @@ def add_sub2(username,session,subscriber):
 	print(html.format(u=username,s=session))
 	conn.close();
 	
-###########################
-# edit password
-def modify_pass(username,password):
 
-	conn = sqlite3.connect(DATABASE)
-	c = conn.cursor()
-
-	t = (password, username)
-	c.execute('UPDATE USERS set password=? WHERE email=?', t)
-	conn.commit()
-	conn.close();
-	
-	
-###########################
-# add subscriber
-def add(username,subscriber):
-
-	conn = sqlite3.connect(DATABASE)
-	c = conn.cursor()
-
-	t = (username, subscriber)
-	c.execute('INSERT INTO subscriptions VALUES (?, ?)', t)
-	conn.commit()
-	conn.close();
-
-###########################
-# remove subscriber
-def remove(username,subscriber):
-	
-	conn = sqlite3.connect(DATABASE)
-	c = conn.cursor()
-
-	t = (username, subscriber)
-	c.execute('DELETE FROM subscriptions WHERE user=? AND subscribed_user=?', t)
-	conn.commit()
-	conn.close();
-	
 def print_html_content_type():
 # Required header that tells the browser how to render the HTML.
 	print("Content-Type: text/html\n\n")

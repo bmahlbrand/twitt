@@ -5,6 +5,7 @@ from contextlib import closing
 from popT import populate
 from create_user import add_user_to_db
 from login import check_password
+
 # configuration
 DATABASE = 'DB/twittr.db'
 DEBUG = True

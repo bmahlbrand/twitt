@@ -9,7 +9,7 @@ import cgi, string, sys, os, re, random
 import session
 
 DATABASE="DB/twittr.db"
-IMAGEPATH="images"
+IMAGEPATH="IMAGES"
 
 #import account_management
 print("Content-Type: text/html\n\n")

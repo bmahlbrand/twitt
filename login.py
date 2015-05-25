@@ -8,8 +8,6 @@ import session
 from datetime import datetime
 
 #####
-#####
-#####
 # TO DO
 # make db changes
 # encrypt passwords?
@@ -17,12 +15,9 @@ from datetime import datetime
 # make look pretty
 #check for bugs
 #####
-#####
-#####
-#Get Databasedir
-MYLOGIN="bahlbran"
+
 DATABASE="DB/twittr.db"
-IMAGEPATH="../"
+IMAGEPATH="IMAGES"
 
 def check_password(user, passwd):
 
@@ -131,27 +126,27 @@ def add_tweet(username,session):
 
 def post_tweet(form):
 
-		#Check session
-	 # if session.check_session(form) != "passed":
-		#    login_form()
-		 #   return
+	#Check session
+ 	# if session.check_session(form) != "passed":
+	#    login_form()
+	#   return
 
-		text = form["text"].value
-		current_time = datetime.now()
-		
-		#profile_pic = form["upload_pic"].value
-		conn = sqlite3.connect(DATABASE)
-		c = conn.cursor()
-		username=form["username"].value
-		t = (username,None,text,current_time.strftime('%Y/%m/%d %I:%M:%S'), "NULL")
-		c.execute("INSERT INTO tweets VALUES (?,?, ?, ?, ?)", t )
-		conn.commit()
-		conn.close();
+	text = form["text"].value
+	current_time = datetime.now()
+	
+	#profile_pic = form["upload_pic"].value
+	conn = sqlite3.connect(DATABASE)
+	c = conn.cursor()
+	username=form["username"].value
+	t = (username,None,text,current_time.strftime('%Y/%m/%d %I:%M:%S'), "NULL")
+	c.execute("INSERT INTO tweets VALUES (?,?, ?, ?, ?)", t )
+	conn.commit()
+	conn.close();
 
 
 
 ###########################
-# remove subscriber
+# remove tweet
 def remove(username,session, tid):
 	conn = sqlite3.connect(DATABASE)
 	c = conn.cursor()
@@ -159,6 +154,7 @@ def remove(username,session, tid):
 	c.execute('DELETE FROM tweets WHERE owner=? AND tweet_id=?', t)
 	conn.commit()
 	conn.close(); 
+	
 ##############################################################
 # Define main function.
 def main():

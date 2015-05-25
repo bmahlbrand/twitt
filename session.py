@@ -5,9 +5,9 @@ import cgi, string, sys, os, re, random
 import cgitb; cgitb.enable()  # for troubleshooting
 import sqlite3
 
-#Get Databasedir
 MYLOGIN="bahlbran"
 DATABASE="DB/twittr.db"
+IMAGEPATH="IMAGES"
 
 def create_session(user):
 	# Store random string as session number

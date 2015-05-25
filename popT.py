@@ -11,14 +11,10 @@ def populate():
 
 	conn = sqlite3.connect('DB/twittr.db')
 	c = conn.cursor()
-	# Add one user
-	# user=('dave@gmail.com','David','Blaine', 'dave123')
-	# c.execute('INSERT INTO users VALUES (?,?,?,?)', user)
 
-	# Larger example that inserts many records at a time
-	users = [('george@gmail.com', 'abc123','George','Constanza', '', 0),
-	             ('mary@gmail.com','mary123', 'Mary', 'Lamb',  '', 0),
-	             ('peter@gmail.com','peter123','Peter','Piper', '',0 ),
+	users = [('george@gmail.com', 'abc123','George','Constanza', '', 1),
+	             ('mary@gmail.com','mary123', 'Mary', 'Lamb',  '', 1),
+	             ('peter@gmail.com','peter123','Peter','Piper', '', 1),
 	            ]
 	c.executemany('INSERT INTO users VALUES (?,?,?,?,?,?)', users)
 

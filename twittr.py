@@ -57,12 +57,12 @@ def add_user():
 	add_user_to_db(request.form)
 	return redirect(url_for('login'))
 
-@app.route('/create_account', methods=['GET','POST'])
+@app.route('/create_account', methods=['GET'])
 def create_account():
 	error = None
 	return render_template('create_account.html', error = error)
 
-@app.route('/manage_account', methods=['GET', 'POST'])
+@app.route('/manage_account', methods=['GET'])
 def manage_account():
 	error = None
 	return render_template('manage_account.html', error = error)

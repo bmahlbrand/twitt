@@ -110,7 +110,7 @@ def create_user_email(form):
 	#fp(registration_confirmation, 'rb')
 	#msg = MIMEText(fp.read())
 	me = "johncarmack@doom.com"
-	email = form["email"].value
+	email = form["email"]
 	
 	body = """
 To complete setting up your account, please click the following link to confirm your email is valid:

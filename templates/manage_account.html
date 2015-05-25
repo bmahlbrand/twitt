@@ -1,21 +1,22 @@
 {% extends "layout.html" %}
 {% block body %}
-<H2>User Options</H2>
-<br>
-<a href="edit.cgi?action=change_pass&username={u}&session={s}">Change Password</a><br>
-<br>
-<a href="edit.cgi?action=add_sub&username={u}&session={s}">Add Subscriber</a><br>
-<FORM ACTION="edit.cgi" METHOD="POST" enctype="multipart/form-data">
-	Search for user to add:<INPUT TYPE=text NAME="subscriber">
-	<input type="hidden" name="username" value="{u}">
-	<input type="hidden" name="session" value="{s}">
-	<input type="hidden" name="action" value="add_sub">
-	<br>
-	<input type="submit" value="Search">
+<h2>User Options</h2>
+
+<form action="edit.cgi" method="post" enctype="multipart/form-data">
+	<dl>
+		<dt><a href="edit.cgi?action=change_pass&username={u}&session={s}">Change Password</a><br>
+		<dt><a href="edit.cgi?action=add_sub&username={u}&session={s}">Add Subscriber</a><br>
+		<dt>Search for user to add:
+		<input type=text name="subscriber">
+		<input type="hidden" name="username" value="{u}">
+		<input type="hidden" name="session" value="{s}">
+		<input type="hidden" name="action" value="add_sub">
+		<input type="submit" value="search">
+
+		<dt><a href="edit.cgi?action=rem_sub&username={u}&session={s}">Remove Subscriber</a>
+	</dl>
 </form>
 
-<br>
-<a href="edit.cgi?action=rem_sub&username={u}&session={s}">Remove Subscriber</a><br><br><br>
-
 <a href="login.cgi?action=refresh&username={u}&session={s}">Back to main</a>
+
 {% endblock %}

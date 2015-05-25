@@ -8,7 +8,6 @@ import cgi, string, sys, os, re, random
 
 import session
 
-#Get Databasedir
 DATABASE="DB/twittr.db"
 IMAGEPATH="images"
 

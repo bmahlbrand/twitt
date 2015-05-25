@@ -52,10 +52,7 @@ def check_password(user, passwd):
 
 #################################################################
 def create_new_session(user):
-		return session.create_session(user)
-
-
-
+	return session.create_session(user)
 
 #############################################################
 # Define main user page

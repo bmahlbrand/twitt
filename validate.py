@@ -12,22 +12,6 @@ IMAGEPATH="/homes/"+MYLOGIN+"/shared_twitter/images"
 #import account_management
 print("Content-Type: text/html\n\n")
 
-def validate():
-		
-	html = """
-<HTML>
-<HEAD>
-<TITLE>activate</TITLE>
-</HEAD>
-<BODY BGCOLOR = white>
-<center><H2>validated</H2></center>
-<p>Thanks for confirming, welcome to PeteTwitt!</p>
-</BODY>
-</HTML>
-"""
-
-	print(html)
-
 def activate(email):
 	conn = sqlite3.connect(DATABASE)
 	c = conn.cursor()

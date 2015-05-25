@@ -1,16 +1,12 @@
 #!/usr/bin/python
 
-# Import the CGI, string, sys modules
 import cgi, string, sys, os, re, random
 import cgitb; cgitb.enable()  # for troubleshooting
 import sqlite3
 import session
 
-
-#Get Databasedir
-MYLOGIN="bahlbran"
-DATABASE="/homes/"+MYLOGIN+"/DB/petetwitt.db"
-IMAGEPATH="/homes/"+MYLOGIN+"/PeteTwitt/images"
+DATABASE="DB/twittr.db"
+IMAGEPATH="images"
 ###############################
 # display main
 def options(username,session):
@@ -37,9 +33,6 @@ def options(username,session):
 	<br>
 	<input type="submit" value="Search">
 	</form>
-	
-	
-
 
 	<br>
 	 <a href="edit.cgi?action=rem_sub&username={u}&session={s}">Remove Subscriber</a><br><br><br>
@@ -52,7 +45,6 @@ def options(username,session):
 	
 	print_html_content_type()
 	print(html.format(u=username,s=session))
-
 
 ###########################
 # edit password
@@ -75,15 +67,9 @@ def change_pass(username,session):
 	print_html_content_type()
 	print(html.format(u=username,s=session))
 	
-	
-	
-	
-	
 ###########################
 # edit password
 def rem_sub(username,session):
-
-
 
 	conn = sqlite3.connect(DATABASE)
 	c = conn.cursor()
@@ -105,9 +91,6 @@ def rem_sub(username,session):
 		<br>
 		"""
 		print(html.format(u=username,s=row[0],ss=session))
-	
-
-
 
 	html="""
 	<br><br>
@@ -116,16 +99,10 @@ def rem_sub(username,session):
 	"""
 	print(html.format(u=username,s=session))
 	conn.close();
-	
-	
-	
-	
-	
+		
 ###########################
 # edit password
 def add_sub(username,session):
-
-
 
 	conn = sqlite3.connect(DATABASE)
 	c = conn.cursor()
@@ -146,9 +123,6 @@ def add_sub(username,session):
 		<br>
 		"""
 		print(html.format(u=username,s=row[0],ss=session))
-	
-
-
 
 	html="""<br><br>
 	<a href="edit.cgi?action=refresh&username={u}&session={s}">Back to user options</a>
@@ -156,14 +130,9 @@ def add_sub(username,session):
 	"""
 	print(html.format(u=username,s=session))
 	conn.close();	
-	
-	
-	
-	
+
 # edit password
 def add_sub2(username,session,subscriber):
-
-
 
 	conn = sqlite3.connect(DATABASE)
 	c = conn.cursor()
@@ -185,28 +154,13 @@ def add_sub2(username,session,subscriber):
 		<br>
 		"""
 		print(html.format(u=username,s=row[0],ss=session))
-	
-
-
 
 	html="""<br><br>
 	<a href="login.cgi?action=refresh&username={u}&session={s}">Back to main</a>
 	</HTML>
 	"""
 	print(html.format(u=username,s=session))
-	conn.close();	
-		
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+	conn.close();
 	
 ###########################
 # edit password

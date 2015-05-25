@@ -61,6 +61,21 @@ def create_account():
 	error = None
 	return render_template('create_account.html', error = error)
 
+@app.route('/activate', methods=['POST'])
+def activate():
+	error = None
+	email = request.form['email']
+	conn = sqlite3.connect(DATABASE)
+	c = conn.cursor()
+	t = (1, email)
+	#get list of subscribed tweets
+	c.execute('UPDATE USERS set activated=? WHERE email=?', t)
+	conn.commit()
+	#s = c.fetchall()
+   
+	#sql = 'SELECT * FROM tweets WHERE owner="'+username+'" OR owner IN (%s) ORDER BY  timestamp DESC' % ',  '.join('?' for a in s[0]) 
+	return render_template('validate.html', error = error)
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
 	error = None

@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+{% block body %}
+<H2>User Registration</H2>
+<H3>Fill in the following:</H3>
+{% if error %}<p class=error><strong>Error:</strong> {{ error }}{% endif %}
+
+<form action="{{ url_for('add_user') }}" method=post>
+	<dl>
+		<dt>Email:<dd><input TYPE=text NAME="email">
+		<dt>Password:<dd><input TYPE=password NAME="password">
+		<dt>First Name:<dd><input TYPE=text NAME="first_name">
+		<dt>Last Name:<dd><input TYPE=text NAME="last_name">
+		<dt>Profile picture:<dd><input TYPE=FILE NAME="profile_pic">
+	</dl>
+	<input TYPE=hidden NAME="action" VALUE="create_user">
+	<input TYPE=submit VALUE="Enter">
+</FORM>
+{% endblock %}

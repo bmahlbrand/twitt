@@ -3,7 +3,8 @@ from flask import Flask, request, session, g, redirect, url_for, abort, render_t
 
 from contextlib import closing
 from popT import populate
-
+from create_user import add_user_to_db
+from login import check_password
 # configuration
 DATABASE = 'DB/twittr.db'
 DEBUG = True
@@ -49,6 +50,17 @@ def add_entry():
     flash('New entry was successfully posted')
     return redirect(url_for('show_entries'))
 
+@app.route('/add_user', methods=['POST'])
+def add_user():
+	error = None
+	add_user_to_db(request.form)
+	return redirect(url_for('login'))
+
+@app.route('/create_account', methods=['GET','POST'])
+def create_account():
+	error = None
+	return render_template('create_account.html', error = error)
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
 	error = None
@@ -63,33 +75,7 @@ def login():
 		elif ret == 'badpasswd':
 			error = 'Invalid password'
 	
-	return render_template('login.html', error=error)
-
-def check_password(user, passwd):
-
-	conn = sqlite3.connect(DATABASE)
-	c = conn.cursor()
-	t = (user,)
-	c.execute('SELECT * FROM users WHERE email=?', t)
-
-	row = stored_password = c.fetchone()
-
-	conn.close()
-
-	if row != None: 
-		stored_password = row[1]
-		print(stored_password)
-		print(passwd)
-		# valid = row[5]
-		if (stored_password == passwd):
-			# if (valid == 1):
-				return 'passed'
-		else:
-			return 'badpasswd'
-	else:
-		return 'badusernm'
-
-	return 'failed'
+	return render_template('login.html', error = error)
 
 @app.route('/logout')
 def logout():

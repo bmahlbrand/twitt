@@ -9,51 +9,20 @@ import cgi, string, sys, os, re, random
 import session
 
 #Get Databasedir
-MYLOGIN="bahlbran"
-DATABASE="/homes/"+MYLOGIN+"/DB/petetwitt.db"
-IMAGEPATH="/homes/"+MYLOGIN+"/shared_twitter/images"
+DATABASE="DB/twittr.db"
+IMAGEPATH="images"
 
 #import account_management
 print("Content-Type: text/html\n\n")
-#create user form
-def create_user_form():
-
-	html="""
-	<HTML>
-	<HEAD>
-	<link rel="stylesheet" type="text/css" href="style.css">
-	<TITLE>Info Form</TITLE>
-	</HEAD>
-	<BODY BGCOLOR = white>
-	<center><H2>User Registration</H2></center>
-	<center><H3>Fill in the following:</H3>
-
-	<TABLE BORDER = 0>
-	<FORM METHOD=post ACTION="create_user.cgi" enctype="multipart/form-data">
-	<TR><TH>Email:</TH><TD><INPUT TYPE=text NAME="email"></TD><TR>
-	<TR><TH>Password:</TH><TD><INPUT TYPE=password NAME="password"></TD></TR>
-	<TR><TH>First Name:</TH><TD><INPUT TYPE=text NAME="first_name"></TD><TR>
-	<TR><TH>Last Name:</TH><TD><INPUT TYPE=text NAME="last_name"></TD></TR>
-	<TR><TH>Profile picture:</TH><TD><INPUT TYPE=FILE NAME="profile_pic"></TD></TR>
-	</TABLE>
-
-	<INPUT TYPE=hidden NAME="action" VALUE="create_user">
-	<INPUT TYPE=submit VALUE="Enter">
-	</FORM></center>
-	</BODY>
-	</HTML>
-	"""
-	#print_html_content_type()
-	print(html)
 
 def create_new_session(user):
     return session.create_session(user)
 
 def add_user_to_db(form):
-	email = form["email"].value
-	password = form["password"].value
-	first_name = form["first_name"].value
-	last_name = form["last_name"].value
+	email = form["email"]
+	password = form["password"]
+	first_name = form["first_name"]
+	last_name = form["last_name"]
 	filepath = IMAGEPATH+"/"+email+"/"
     #profile_pic = form["profile_pic"]
 	#profile_pic = form["upload_pic"].value
@@ -133,7 +102,7 @@ def show_image(form):
 
     # Send header and image content
     hdr = "Content-Type: image/jpeg\nContent-Length: %d\n\n" % len(content)
-    print hdr+content
+    print(hdr+content)
 
 #email...
 #add
@@ -163,7 +132,7 @@ To complete setting up your account, please click the following link to confirm 
 	s.quit()
 
 def main():
-	create_user_form()
+	# create_user_form()
 	form = cgi.FieldStorage()
 	
 	if "action" in form:

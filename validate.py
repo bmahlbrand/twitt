@@ -7,7 +7,7 @@ import cgi, string, sys, os, re, random
 import urlparse
 
 MYLOGIN="bahlbran"
-DATABASE="/homes/"+MYLOGIN+"/shared_twitter/petetwitt.db"
+DATABASE="DB/twittr.db"
 IMAGEPATH="/homes/"+MYLOGIN+"/shared_twitter/images"
 #import account_management
 print("Content-Type: text/html\n\n")

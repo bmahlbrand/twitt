@@ -7,7 +7,7 @@ import sqlite3
 
 #Get Databasedir
 MYLOGIN="bahlbran"
-DATABASE="/homes/"+MYLOGIN+"/shared_twitter/petetwitt.db"
+DATABASE="DB/twittr.db"
 
 def create_session(user):
     # Store random string as session number
@@ -61,4 +61,3 @@ def read_session_string(user):
       return 'no session'
 
     return row[1]
-

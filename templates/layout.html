@@ -1,8 +1,10 @@
 <!doctype html>
 <title>Twittr</title>
+
 <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
 <div class=page>
 	<h1>Twittr</h1>
+	<img src="static/PeteTwitt.png" class=header>
 	<div class=metanav>
 	{% if not session.logged_in %}
 		<a href="{{ url_for('create_account') }}">create account</a>

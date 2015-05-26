@@ -6,6 +6,7 @@ from popT import populate
 from create_user import add_user_to_db
 from login import check_password
 from account_management import modify_pass
+
 # configuration
 DATABASE = 'DB/twittr.db'
 DEBUG = True
@@ -33,7 +34,7 @@ def get_db():
 
 def query_db(query, args=(), one=False):
 	cur = get_db().cursor()
-	g.db.execute(query, args)
+	get_db().execute(query, args)
 	get_db().commit()
 	rv = cur.fetchall()
 	cur.close()
@@ -50,10 +51,9 @@ def teardown_request(exception):
 	if db is not None:
 		db.close()
 
-	
 @app.route('/')
 def show_entries():
-	cur = g.db.execute('select owner, text, timestamp from tweets order by timestamp desc')
+	cur = get_db().execute('select owner, text, timestamp from tweets order by timestamp desc')
 	tweets = [dict(owner = row[0], text = row[1], timestamp = row[2]) for row in cur.fetchall()]
 	return render_template('show_entries.html', entries = tweets)
 
@@ -62,9 +62,9 @@ def add_entry():
 	if not session.get('logged_in'):
 		abort(401)
 
-	g.db.execute('insert into tweets (owner, text, timestamp, pic_path) values (?, ?, ?, ?)',
+	get_db().execute('insert into tweets (owner, text, timestamp, pic_path) values (?, ?, ?, ?)',
 				 [session.get('user'), request.form['text'], datetime.now(), None])
-	g.db.commit()
+	get_db().commit()
 	flash('New entry was successfully posted')
 	return redirect(url_for('show_entries'))
 
@@ -79,9 +79,9 @@ def create_account():
 				[request.form['email'],  request.form['password'],  request.form['first_name'],  request.form['last_name'],  request.form['profilepic_path'], 0])
 			get_db().commit()
 
-			error = 'successfully created new account'
+			success = 'successfully created new account'
 			# return redirect(url_for('login'))
-			return render_template('login.html', error = error)
+			return render_template('login.html', success = success)
 		else:
 			error = 'user exists'
 			return render_template('create_account.html', error = error)			
@@ -101,8 +101,8 @@ def change_password():
 	if request.method == 'POST':
 		ret = check_password(session.get('user'), request.form['oldpassword'])
 		if ret == 'passed' and request.form['password'] == request.form['confirm']:
-			g.db.execute('UPDATE USERS set password=? WHERE email=?', [request.form['password'], session.get('user')])
-			g.db.commit()
+			get_db().execute('UPDATE USERS set password=? WHERE email=?', [request.form['password'], session.get('user')])
+			get_db().commit()
 			flash('password change successful')
 			return redirect(url_for('show_entries'))
 		elif ret == 'badpasswd':

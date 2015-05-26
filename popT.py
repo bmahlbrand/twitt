@@ -18,10 +18,10 @@ def populate():
 	            ]
 	c.executemany('INSERT INTO users VALUES (?,?,?,?,?,?)', users)
 
-	tweets = [('george@gmail.com',0,"tweet0",str(current_time),"NULL"),
-	           ('George@gmail.com',1,"tweet1",str(current_time),"NULL"),
-	           ('george@gmail.com',2,"tweet2",str(current_time),"NULL"),
-	           ('mary@gmail.com',3,"tweet3",str(current_time), "NULL"),]      
+	tweets = [(0, 'george@gmail.com',"tweet0",str(current_time),"NULL"),
+	           (1, 'george@gmail.com',"tweet1",str(current_time),"NULL"),
+	           (2, 'george@gmail.com',"tweet2",str(current_time),"NULL"),
+	           (3, 'mary@gmail.com',"tweet3",str(current_time), "NULL"),]      
 	c.executemany('INSERT INTO tweets  VALUES (?,?,?,?,?)', tweets)
 
 	subs = [

@@ -1,26 +1,18 @@
-drop table if exists entries;
-create table entries (
-	id integer primary key autoincrement,
-	title text not null,
-	text text not null
-);
-
 drop table if exists users;
 create table users (
-	email TEXT NOT NULL,
+	email TEXT PRIMARY KEY,
 	password TEXT NOT NULL,
 	first_name TEXT NOT NULL,
 	last_name TEXT NOT NULL, 
 	profilepic_path TEXT NOT NULL,
-    activated INTEGER NOT NULL,
-	PRIMARY KEY(email)
+    activated INTEGER NOT NULL
 );
 
 drop table if exists tweets;
 CREATE TABLE tweets (
-	owner TEXT NOT NULL,
     tweet_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    tweet_text VARCHAR(140) NOT NULL,
+	owner TEXT NOT NULL,
+    text VARCHAR(140) NOT NULL,
     timestamp TIMESTAMP NOT NULL,
     pic_path TEXT
 );

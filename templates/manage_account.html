@@ -2,15 +2,12 @@
 {% block body %}
 <h2>User Options</h2>
 
-<form action="edit.cgi" method="post" enctype="multipart/form-data">
+<form method="get">
 	<dl>
-		<dt><a href="edit.cgi?action=change_pass&username={u}&session={s}">Change Password</a><br>
+		<dt><a href="/change_password">Change Password</a><br>
 		<dt><a href="edit.cgi?action=add_sub&username={u}&session={s}">Add Subscriber</a><br>
 		<dt>Search for user to add:
 		<input type=text name="subscriber">
-		<input type="hidden" name="username" value="{u}">
-		<input type="hidden" name="session" value="{s}">
-		<input type="hidden" name="action" value="add_sub">
 		<input type="submit" value="search">
 
 		<dt><a href="edit.cgi?action=rem_sub&username={u}&session={s}">Remove Subscriber</a>

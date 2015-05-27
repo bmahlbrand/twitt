@@ -2,18 +2,24 @@
 {% block body %}
 <h2>User Options</h2>
 
-<form method="get">
+	<form method="get">
 	<dl>
 		<dt><a href="/change_password">Change Password</a><br>
-		<dt><a href="edit.cgi?action=add_sub&username={u}&session={s}">Add Subscriber</a><br>
-		<dt>Search for user to add:
-		<input type=text name="subscriber">
-		<input type="submit" value="search">
-
-		<dt><a href="edit.cgi?action=rem_sub&username={u}&session={s}">Remove Subscriber</a>
 	</dl>
-</form>
+	</form>
 
-<a href="login.cgi?action=refresh&username={u}&session={s}">Back to main</a>
+	<form method="post">
+		<dl>
+			<dt><a href="/subscribe">Add Subscriber</a><br>
+			<dt>Search for user to add:
+			<input type=text name="subscribee">
+			<input type="submit" value="search">
+			<dt><a href="/unsubscribe">Remove Subscriber</a>
+		</dl>
+	</form>
+	
+
+
+<a href="/">Back to main</a>
 
 {% endblock %}

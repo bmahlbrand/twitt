@@ -6,7 +6,7 @@ import cgitb; cgitb.enable()  # for troubleshooting
 import sqlite3
 import cgi, string, sys, os, re, random
 
-import session
+# import session
 
 DATABASE="DB/twittr.db"
 IMAGEPATH="IMAGES"
@@ -28,7 +28,7 @@ def add_user_to_db(form):
 
 	#add email_exists
 	if email_exists(email) == "passed":
-		session=create_new_session(email)
+		# session=create_new_session(email)
 
 		conn = sqlite3.connect(DATABASE)
 		c = conn.cursor()

@@ -7,15 +7,9 @@ from create_user import add_user_to_db
 from login import check_password
 from account_management import modify_pass
 
-# configuration
-DATABASE = 'DB/twittr.db'
-DEBUG = True
-SECRET_KEY = 'development key'
-USERNAME = 'admin'
-PASSWORD = 'default'
-
 app = Flask(__name__)
-app.config.from_object(__name__)
+app.config.from_pyfile('twittr.cfg', silent=True)
+# app.config.from_object(__name__)
 
 def connect_db():
 	return sqlite3.connect(app.config['DATABASE'])
@@ -79,12 +73,10 @@ def create_account():
 				[request.form['email'],  request.form['password'],  request.form['first_name'],  request.form['last_name'],  request.form['profilepic_path'], 0])
 			get_db().commit()
 
-			success = 'successfully created new account'
-			# return redirect(url_for('login'))
-			return render_template('login.html', success = success)
+			flash('successfully created new account')
+			return render_template('login.html', error = error)
 		else:
 			error = 'user exists'
-			return render_template('create_account.html', error = error)			
 
 	elif request.method == 'GET':
 		return render_template('create_account.html', error = error)
@@ -105,21 +97,37 @@ def change_password():
 			get_db().commit()
 			flash('password change successful')
 			return redirect(url_for('show_entries'))
+		
 		elif ret == 'badpasswd':
 			error = 'invalid password'
-			return render_template('change_password.html', error = error)
 		else:
 			error = "passwords don't match"
-			return render_template('change_password.html', error = error)
-	elif request.method == 'GET':
-		return render_template('change_password.html', error = error)
+
+	return render_template('change_password.html', error = error)
+
+@app.route('/subscribe', methods=['GET', 'POST'])
+def subscribe():
+	username = session.get('user')
+	subscribee = request.form['subscribee']
+	print(username)
+	print(subscribee)
+	get_db().execute('INSERT INTO subscriptions VALUES (?, ?)', [username, subscribee])
+	get_db().commit()
+
+@app.route('/unsubscribe', methods=['GET', 'POST'])
+def unsubscribe():
+	username = session.get('user')
+	subscribee = request.form['subscribee']
+	
+	get_db().execute('DELETE FROM subscriptions WHERE user=? AND subscribed_user=?', [username, subscribee])
+	get_db().commit()
 
 @app.route('/activate', methods=['POST'])
 def activate():
 	error = None
 
-	g.db.execute('UPDATE USERS set activated=? WHERE email=?', [1, request.form['email']])
-	g.db.commit()
+	get_db().execute('UPDATE USERS set activated=? WHERE email=?', [1, request.form['email']])
+	get_db().commit()
 
 	return render_template('validate.html', error = error)
 
@@ -137,8 +145,10 @@ def login():
 			error = 'Invalid username'
 		elif ret == 'badpasswd':
 			error = 'Invalid password'
-	
-	return render_template('login.html', error = error)
+	if session['logged_in'] == True:
+		return redirect(url_for('show_entries'))
+	else:
+		return render_template('login.html', error = error)
 
 @app.route('/logout')
 def logout():

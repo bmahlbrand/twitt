@@ -4,7 +4,7 @@
 import cgi, string, sys, os, re, random
 import cgitb; cgitb.enable()  # for troubleshooting
 import sqlite3
-import session
+# import session
 from datetime import datetime
 
 #####
@@ -46,12 +46,11 @@ def check_password(user, passwd):
 	return 'failed'
 
 #################################################################
-def create_new_session(user):
-	return session.create_session(user)
+# def create_new_session(user):
+# 	return session.create_session(user)
 
 #############################################################
 # Define main user page
-
 def display_main_page(username, session):
 	 #Check session
 	 # if (session.check_session(form) != "passed"):

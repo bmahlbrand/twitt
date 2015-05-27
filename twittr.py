@@ -107,20 +107,32 @@ def change_password():
 
 @app.route('/subscribe', methods=['GET', 'POST'])
 def subscribe():
-	username = session.get('user')
-	subscribee = request.form['subscribee']
-	print(username)
-	print(subscribee)
-	get_db().execute('INSERT INTO subscriptions VALUES (?, ?)', [username, subscribee])
-	get_db().commit()
+	if request.method == 'POST':
+		username = session.get('user')
+		subscribee = request.form['subscribee']
+		print(username)
+		print(subscribee)
+		get_db().execute('INSERT INTO subscriptions VALUES (?, ?)', [username, subscribee])
+		get_db().commit()
+	elif request.method == 'GET':
+		cur = get_db().execute('SELECT email, first_name, last_name, profilepic_path FROM users WHERE email!=?', [session.get('user')])
+		users = [dict(email = row[0], first_name = row[1], last_name = row[2], profilepic_path = row[3]) for row in cur.fetchall()]
+		return render_template('subscribe.html', entries = users)
+
 
 @app.route('/unsubscribe', methods=['GET', 'POST'])
 def unsubscribe():
-	username = session.get('user')
-	subscribee = request.form['subscribee']
-	
-	get_db().execute('DELETE FROM subscriptions WHERE user=? AND subscribed_user=?', [username, subscribee])
-	get_db().commit()
+	if request.method == 'POST':
+		username = session.get('user')
+		subscribee = request.form['subscribee']
+		print(username)
+		print(subscribee)
+		get_db().execute('DELETE FROM subscriptions WHERE user=? AND subscribed_user=?', [username, subscribee])
+		get_db().commit()
+	elif request.method == 'GET':
+		cur = get_db().execute('SELECT subscribed_user FROM subscriptions WHERE user=?', [session.get('user')])
+		users = [dict(email = row[0]) for row in cur.fetchall()]
+		return render_template('unsubscribe.html', entries = users)
 
 @app.route('/activate', methods=['POST'])
 def activate():

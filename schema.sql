@@ -20,7 +20,8 @@ CREATE TABLE tweets (
 drop table if exists subscriptions;
 CREATE TABLE subscriptions (
 	user TEXT NOT NULL,
-	subscribed_user TEXT NOT NULL
+	subscribed_user TEXT NOT NULL,
+	UNIQUE(user, subscribed_user)
 );
 
 drop table if exists sessions;

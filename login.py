@@ -21,6 +21,8 @@ IMAGEPATH="IMAGES"
 
 def check_password(user, passwd):
 
+	
+	return check_password_hash(self.pwdhash, passwd)
 	conn = sqlite3.connect(DATABASE)
 	c = conn.cursor()
 	t = (user,)

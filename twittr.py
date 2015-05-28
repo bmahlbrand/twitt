@@ -1,15 +1,19 @@
+#!/usr/bin/python
+
 import sqlite3
 from flask import Flask, request, session, g, redirect, url_for, abort, render_template, flash
+from werkzeug import generate_password_hash, check_password_hash
 from datetime import datetime
 from contextlib import closing
 from popT import populate
 from create_user import add_user_to_db
 from login import check_password
 from account_management import modify_pass
+import smtplib 
+from email.mime.text import MIMEText
 
 app = Flask(__name__)
-app.config.from_pyfile('twittr.cfg', silent=True)
-# app.config.from_object(__name__)
+app.config.from_pyfile('conf.cfg', silent=True)
 
 def connect_db():
 	return sqlite3.connect(app.config['DATABASE'])
@@ -56,11 +60,30 @@ def add_entry():
 	if not session.get('logged_in'):
 		abort(401)
 
-	get_db().execute('insert into tweets (owner, text, timestamp, pic_path) values (?, ?, ?, ?)',
+	cur = get_db().cursor()
+	cur.execute('insert into tweets (owner, text, timestamp, pic_path) values (?, ?, ?, ?)',
 				 [session.get('user'), request.form['text'], datetime.now(), None])
 	get_db().commit()
+
 	flash('New entry was successfully posted')
 	return redirect(url_for('show_entries'))
+
+def create_user_email(email):
+	body =  """
+			To complete setting up your account, please click the following link to confirm your email is valid:
+			"http://data.cs.purdue.edu:8892/petetwitt/validate.cgi?action=activate&email={0}"
+			""".format(email)
+
+	msg = MIMEText(body)
+
+	msg['Subject'] = 'Validate your PeteTwitt account' #% registration_confirmation
+	msg['From'] = app.config['MAIL_USERNAME']
+	msg['To'] = email
+
+	s = smtplib.SMTP_SSL(app.config['MAIL_SERVER'], app.config['MAIL_PORT'])
+	s.login(app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'])
+	s.sendmail(app.config['MAIL_USERNAME'], [email], msg.as_string())
+	s.quit()
 
 @app.route('/create_account', methods=['GET', 'POST'])
 def create_account():
@@ -74,12 +97,13 @@ def create_account():
 			get_db().commit()
 
 			flash('successfully created new account')
+			print('balls')
+			create_user_email(request.form['email'])
 			return render_template('login.html', error = error)
 		else:
 			error = 'user exists'
 
-	elif request.method == 'GET':
-		return render_template('create_account.html', error = error)
+	return render_template('create_account.html', error = error)
 
 @app.route('/manage_account', methods=['GET'])
 def manage_account():
@@ -107,31 +131,59 @@ def change_password():
 
 @app.route('/subscribe', methods=['GET', 'POST'])
 def subscribe():
+	error = None
 	if request.method == 'POST':
 		username = session.get('user')
 		subscribee = request.form['subscribee']
-		print(username)
-		print(subscribee)
-		get_db().execute('INSERT INTO subscriptions VALUES (?, ?)', [username, subscribee])
+		
+		cur = get_db().cursor()
+		cur.execute('INSERT INTO subscriptions (user, subscribed_user) VALUES (?, ?)', [username, subscribee])
 		get_db().commit()
+		
+		flash('You subscribed!')
+		return redirect(url_for('manage_account'))
 	elif request.method == 'GET':
-		cur = get_db().execute('SELECT email, first_name, last_name, profilepic_path FROM users WHERE email!=?', [session.get('user')])
-		users = [dict(email = row[0], first_name = row[1], last_name = row[2], profilepic_path = row[3]) for row in cur.fetchall()]
-		return render_template('subscribe.html', entries = users)
+		cur = get_db().cursor()
+		cur.execute('SELECT subscribed_user FROM subscriptions WHERE user = ?', [session.get('user')])
+		get_db().commit()
+		subscribed_users = [row[0] for row in cur.fetchall()]
 
+		rv = []
+		cur.execute('SELECT email, first_name, last_name, profilepic_path FROM users WHERE email != ?', [session.get('user')])
+
+		for row in cur.fetchall():
+			if row[0] not in subscribed_users and row[0] != session.get('user'):
+				rv.append(row)
+
+		users = [dict(email = row[0], first_name = row[1], last_name = row[2], profilepic_path = row[3])  for row in rv]
+		return render_template('subscribe.html', entries = users)
 
 @app.route('/unsubscribe', methods=['GET', 'POST'])
 def unsubscribe():
+	error = None
 	if request.method == 'POST':
 		username = session.get('user')
 		subscribee = request.form['subscribee']
-		print(username)
-		print(subscribee)
-		get_db().execute('DELETE FROM subscriptions WHERE user=? AND subscribed_user=?', [username, subscribee])
+
+		cur = get_db().cursor()
+		cur.execute('DELETE FROM subscriptions WHERE user=? AND subscribed_user=?', [username, subscribee])
 		get_db().commit()
+		flash('You unsubscribed!')
+		return redirect(url_for('manage_account'))
 	elif request.method == 'GET':
-		cur = get_db().execute('SELECT subscribed_user FROM subscriptions WHERE user=?', [session.get('user')])
-		users = [dict(email = row[0]) for row in cur.fetchall()]
+		cur = get_db().cursor()
+		cur.execute('SELECT subscribed_user FROM subscriptions WHERE user=?', [session.get('user')])
+		subscribed_users = [row[0] for row in cur.fetchall()]
+
+		rv = []
+		cur.execute('SELECT email, first_name, last_name, profilepic_path FROM users WHERE email != ?', [session.get('user')])
+
+		for row in cur.fetchall():
+			if row[0] in subscribed_users and row[0] != session.get('user'):
+				rv.append(row)
+
+		users = [dict(email = row[0], first_name = row[1], last_name = row[2], profilepic_path = row[3])  for row in rv]
+
 		return render_template('unsubscribe.html', entries = users)
 
 @app.route('/activate', methods=['POST'])
@@ -157,7 +209,7 @@ def login():
 			error = 'Invalid username'
 		elif ret == 'badpasswd':
 			error = 'Invalid password'
-	if session['logged_in'] == True:
+	if 'logged_in' in session and session['logged_in'] == True:
 		return redirect(url_for('show_entries'))
 	else:
 		return render_template('login.html', error = error)

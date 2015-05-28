@@ -2,19 +2,21 @@
 
 import sqlite3
 import datetime
+from werkzeug import generate_password_hash
+
 current_time = datetime.datetime.now().time()
 
 def populate():
 	print
 	print ("Run only once or you will get error for duplicates")
 	print 
-
+	init_db()
 	conn = sqlite3.connect('DB/twittr.db')
 	c = conn.cursor()
 
-	users = [('george@gmail.com', 'abc123','George','Constanza', '', 1),
-	             ('mary@gmail.com','mary123', 'Mary', 'Lamb',  '', 1),
-	             ('peter@gmail.com','peter123','Peter','Piper', '', 1),
+	users = [('george@gmail.com', generate_password_hash('abc123'),'George','Constanza', '', 1),
+	             ('mary@gmail.com',generate_password_hash('mary123'), 'Mary', 'Lamb',  '', 1),
+	             ('peter@gmail.com',generate_password_hash('peter123'),'Peter','Piper', '', 1),
 	            ]
 	c.executemany('INSERT INTO users VALUES (?,?,?,?,?,?)', users)
 

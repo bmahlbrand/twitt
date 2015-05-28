@@ -6,7 +6,7 @@ import cgitb; cgitb.enable()  # for troubleshooting
 import sqlite3
 # import session
 from datetime import datetime
-
+from werkzeug import generate_password_hash, check_password_hash
 #####
 # TO DO
 # make db changes
@@ -21,8 +21,8 @@ IMAGEPATH="IMAGES"
 
 def check_password(user, passwd):
 
-	
-	return check_password_hash(self.pwdhash, passwd)
+
+	# return check_password_hash(self.pwdhash, passwd)
 	conn = sqlite3.connect(DATABASE)
 	c = conn.cursor()
 	t = (user,)
@@ -34,10 +34,8 @@ def check_password(user, passwd):
 
 	if row != None: 
 		stored_password = row[1]
-		print(stored_password)
-		print(passwd)
 		# valid = row[5]
-		if (stored_password == passwd):
+		if check_password_hash(stored_password, passwd):
 			# if (valid == 1):
 				return 'passed'
 		else:

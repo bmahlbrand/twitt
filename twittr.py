@@ -15,6 +15,18 @@ from email.mime.text import MIMEText
 app = Flask(__name__)
 app.config.from_pyfile('conf.cfg', silent=True)
 
+# from database import db_session, init_db
+import database
+from models import User
+
+import logging
+logging.basicConfig()
+logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+
+@app.teardown_appcontext
+def shutdown_session(exception=None):
+    database.db_session.remove()
+
 def connect_db():
 	return sqlite3.connect(app.config['DATABASE'])
 
@@ -33,10 +45,8 @@ def get_db():
 def query_db(query, args=(), one=False):
 	cur = get_db().cursor()
 	get_db().execute(query, args)
-	get_db().commit()
 	rv = cur.fetchall()
 	cur.close()
-	print(rv)
 	return (rv[0] if rv else None) if one else rv
 
 @app.before_request
@@ -92,12 +102,22 @@ def create_account():
 		user = query_db('select * from users where email = ?', [request.form['email']], one=True)
 
 		if user is None:
+			# u = User(str(request.form['email']), 
+			# 		str(request.form['password']), 
+			# 		str(request.form['first_name']),
+			# 		str(request.form['last_name']), 
+			# 		str(request.form['profilepic_path']), 
+			# 		0
+			# 		)
+			# database.db_session().add(u)
+			# database.db_session.commit()
+			# User.query.all()
 			get_db().execute('insert into users VALUES (?, ?, ?, ?, ?, ?)', 
-				[request.form['email'],  request.form['password'],  request.form['first_name'],  request.form['last_name'],  request.form['profilepic_path'], 0])
+				[request.form['email'],  generate_password_hash(request.form['password']),  request.form['first_name'],  request.form['last_name'],  request.form['profilepic_path'], 0])
 			get_db().commit()
 
 			flash('successfully created new account')
-			print('balls')
+			# print('balls')
 			create_user_email(request.form['email'])
 			return render_template('login.html', error = error)
 		else:
@@ -115,6 +135,7 @@ def change_password():
 	error = None
 
 	if request.method == 'POST':
+
 		ret = check_password(session.get('user'), request.form['oldpassword'])
 		if ret == 'passed' and request.form['password'] == request.form['confirm']:
 			get_db().execute('UPDATE USERS set password=? WHERE email=?', [request.form['password'], session.get('user')])
@@ -221,6 +242,7 @@ def logout():
 	return redirect(url_for('show_entries'))
 
 if __name__ == '__main__':
+	
 	init_db()
-	populate()
+	# populate()
 	app.run()

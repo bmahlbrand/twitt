@@ -10,7 +10,7 @@ def populate():
 	print
 	print ("Run only once or you will get error for duplicates")
 	print 
-	init_db()
+	# init_db()
 	conn = sqlite3.connect('DB/twittr.db')
 	c = conn.cursor()
 

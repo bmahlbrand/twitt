@@ -2,67 +2,96 @@
 
 import sqlite3
 from flask import Flask, request, session, g, redirect, url_for, abort, render_template, flash
-from werkzeug import generate_password_hash, check_password_hash
+from werkzeug import generate_password_hash, check_password_hash, secure_filename
 from datetime import datetime
 from contextlib import closing
-from popT import populate
-from create_user import add_user_to_db
-from login import check_password
-from account_management import modify_pass
+
 import smtplib 
 from email.mime.text import MIMEText
 
+from models import User, Tweet, Subscription
+
+ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
+
 app = Flask(__name__)
-app.config.from_pyfile('conf.cfg', silent=True)
+app.config.from_pyfile('conf.cfg', silent = True)
 
-# from database import db_session, init_db
-import database
-from models import User
+from database import db_session, init_dbs
 
-import logging
-logging.basicConfig()
-logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+# import logging
+# logging.basicConfig()
+# logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 @app.teardown_appcontext
-def shutdown_session(exception=None):
-    database.db_session.remove()
+def shutdown_session(exception = None):
+    db_session.remove()
 
-def connect_db():
-	return sqlite3.connect(app.config['DATABASE'])
+# def connect_db():
+# 	return sqlite3.connect(app.config['DATABASE'])
 
-def init_db():
-	with closing(connect_db()) as db:
-		with app.open_resource('schema.sql', mode='r') as f:
-			db.cursor().executescript(f.read())
-		db.commit()
+# def init_db():
+# 	with closing(connect_db()) as db:
+# 		with app.open_resource('schema.sql', mode='r') as f:
+# 			db.cursor().executescript(f.read())
+# 		db.commit()
 
-def get_db():
-    db = getattr(g, 'db', None)
-    if db is None:
-        db = g.db = connect_db()
-    return db
+# def get_db():
+#     db = getattr(g, 'db', None)
+#     if db is None:
+#         db = g.db = connect_db()
+#     return db
 
-def query_db(query, args=(), one=False):
-	cur = get_db().cursor()
-	get_db().execute(query, args)
-	rv = cur.fetchall()
-	cur.close()
-	return (rv[0] if rv else None) if one else rv
+# def query_db(query, args=(), one=False):
+# 	cur = get_db().cursor()
+# 	get_db().execute(query, args)
+# 	rv = cur.fetchall()
+# 	cur.close()
+# 	return (rv[0] if rv else None) if one else rv
 
-@app.before_request
-def before_request():
-	g.db = connect_db()
+# @app.before_request
+# def before_request():
+# 	g.db = connect_db()
 
-@app.teardown_request
-def teardown_request(exception):
-	db = getattr(g, 'db', None)
-	if db is not None:
-		db.close()
+# @app.teardown_request
+# def teardown_request(exception):
+# 	db = getattr(g, 'db', None)
+# 	if db is not None:
+# 		db.close()
+
+import os
+from flask import send_from_directory
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'),
+                               'favicon.ico', mimetype='image/vnd.microsoft.icon')
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+
+@app.route('/upload', methods=['GET', 'POST'])
+def upload_file():
+    if request.method == 'POST':
+        file = request.files['file']
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            return redirect(url_for('uploaded_file', filename=filename))
+    return '''
+    <!doctype html>
+    <title>Upload new File</title>
+    <h1>Upload new File</h1>
+    <form action="" method=post enctype=multipart/form-data>
+      <p><input type=file name=file>
+         <input type=submit value=Upload>
+    </form>
+    '''
 
 @app.route('/')
 def show_entries():
-	cur = get_db().execute('select owner, text, timestamp from tweets order by timestamp desc')
-	tweets = [dict(owner = row[0], text = row[1], timestamp = row[2]) for row in cur.fetchall()]
+	results = Tweet.query.filter_by(owner = session.get('user')).all()
+	tweets = [dict(owner = tweet.owner, text = tweet.text, timestamp = tweet.timestamp) for tweet in Tweet.query.filter_by(owner = session.get('user')).all()]
 	return render_template('show_entries.html', entries = tweets)
 
 @app.route('/add', methods=['POST'])
@@ -70,10 +99,9 @@ def add_entry():
 	if not session.get('logged_in'):
 		abort(401)
 
-	cur = get_db().cursor()
-	cur.execute('insert into tweets (owner, text, timestamp, pic_path) values (?, ?, ?, ?)',
-				 [session.get('user'), request.form['text'], datetime.now(), None])
-	get_db().commit()
+	tweet = Tweet(session.get('user'), request.form['text'], datetime.now(), None)
+	database.db_session().add(tweet)
+	database.db_session().commit()
 
 	flash('New entry was successfully posted')
 	return redirect(url_for('show_entries'))
@@ -99,27 +127,22 @@ def create_user_email(email):
 def create_account():
 	error = None
 	if request.method == 'POST':
-		user = query_db('select * from users where email = ?', [request.form['email']], one=True)
+		user = User.query.filter_by(email = request.form['email']).first()
 
 		if user is None:
-			# u = User(str(request.form['email']), 
-			# 		str(request.form['password']), 
-			# 		str(request.form['first_name']),
-			# 		str(request.form['last_name']), 
-			# 		str(request.form['profilepic_path']), 
-			# 		0
-			# 		)
-			# database.db_session().add(u)
-			# database.db_session.commit()
-			# User.query.all()
-			get_db().execute('insert into users VALUES (?, ?, ?, ?, ?, ?)', 
-				[request.form['email'],  generate_password_hash(request.form['password']),  request.form['first_name'],  request.form['last_name'],  request.form['profilepic_path'], 0])
-			get_db().commit()
+			u = User(request.form['email'], 
+					request.form['password'], 
+					request.form['first_name'],
+					request.form['last_name'], 
+					request.form['profilepic_path'])
+
+			database.db_session().add(u)
+			database.db_session().commit()
 
 			flash('successfully created new account')
-			# print('balls')
 			create_user_email(request.form['email'])
-			return render_template('login.html', error = error)
+
+			return render_template('login.html')
 		else:
 			error = 'user exists'
 
@@ -135,18 +158,21 @@ def change_password():
 	error = None
 
 	if request.method == 'POST':
-
-		ret = check_password(session.get('user'), request.form['oldpassword'])
-		if ret == 'passed' and request.form['password'] == request.form['confirm']:
-			get_db().execute('UPDATE USERS set password=? WHERE email=?', [request.form['password'], session.get('user')])
-			get_db().commit()
-			flash('password change successful')
-			return redirect(url_for('show_entries'))
-		
-		elif ret == 'badpasswd':
-			error = 'invalid password'
+		if request.form['password'] == request.form['confirm']:
+			user = User.query.filter_by(email=session.get('user')).first()
 		else:
 			error = "passwords don't match"
+
+		if user is not None:
+			ret = user.check_password(request.form['oldpassword'])
+		
+		if ret == True:
+			user.set_password(request.form['password'])
+
+			flash('password change successful')
+			return redirect(url_for('show_entries'))
+		else:
+			error = 'invalid password'
 
 	return render_template('change_password.html', error = error)
 
@@ -157,26 +183,24 @@ def subscribe():
 		username = session.get('user')
 		subscribee = request.form['subscribee']
 		
-		cur = get_db().cursor()
-		cur.execute('INSERT INTO subscriptions (user, subscribed_user) VALUES (?, ?)', [username, subscribee])
-		get_db().commit()
+		s = Subscription(username, subscribee)
+
+		database.db_session().add(s)
+		database.db_session().commit()
 		
 		flash('You subscribed!')
 		return redirect(url_for('manage_account'))
 	elif request.method == 'GET':
-		cur = get_db().cursor()
-		cur.execute('SELECT subscribed_user FROM subscriptions WHERE user = ?', [session.get('user')])
-		get_db().commit()
-		subscribed_users = [row[0] for row in cur.fetchall()]
 
-		rv = []
-		cur.execute('SELECT email, first_name, last_name, profilepic_path FROM users WHERE email != ?', [session.get('user')])
+		subscribed_users = [result.subscribed_user for result in Subscription.query.filter_by(email_id = session.get('user')).all()]
+		rv = database.db_session().query(User).filter(User.email != session.get('user')).all()
 
-		for row in cur.fetchall():
-			if row[0] not in subscribed_users and row[0] != session.get('user'):
-				rv.append(row)
+		results = []
+		for row in rv:
+			if row.email not in subscribed_users:
+				results.append(row)
 
-		users = [dict(email = row[0], first_name = row[1], last_name = row[2], profilepic_path = row[3])  for row in rv]
+		users = [dict(email = row.email, first_name = row.first_name, last_name = row.last_name, profilepic_path = row.profilepic_path)  for row in results]
 		return render_template('subscribe.html', entries = users)
 
 @app.route('/unsubscribe', methods=['GET', 'POST'])
@@ -186,24 +210,24 @@ def unsubscribe():
 		username = session.get('user')
 		subscribee = request.form['subscribee']
 
-		cur = get_db().cursor()
-		cur.execute('DELETE FROM subscriptions WHERE user=? AND subscribed_user=?', [username, subscribee])
-		get_db().commit()
+		s = Subscription.query.filter(Subscription.email_id == username,
+		 								Subscription.subscribed_user == subscribee).first()
+		database.db_session().delete(s)
+		database.db_session().commit()
+
 		flash('You unsubscribed!')
 		return redirect(url_for('manage_account'))
 	elif request.method == 'GET':
-		cur = get_db().cursor()
-		cur.execute('SELECT subscribed_user FROM subscriptions WHERE user=?', [session.get('user')])
-		subscribed_users = [row[0] for row in cur.fetchall()]
+		subscribed_users = [result.subscribed_user for result in Subscription.query.filter_by(email_id = session.get('user')).all()]
+		rv = database.db_session().query(User).filter(User.email != session.get('user')).all()
 
-		rv = []
-		cur.execute('SELECT email, first_name, last_name, profilepic_path FROM users WHERE email != ?', [session.get('user')])
+		results = []
 
-		for row in cur.fetchall():
-			if row[0] in subscribed_users and row[0] != session.get('user'):
-				rv.append(row)
+		for row in rv:
+			if row.email in subscribed_users:
+				results.append(row)
 
-		users = [dict(email = row[0], first_name = row[1], last_name = row[2], profilepic_path = row[3])  for row in rv]
+		users = [dict(email = row.email, first_name = row.first_name, last_name = row.last_name, profilepic_path = row.profilepic_path)  for row in results]
 
 		return render_template('unsubscribe.html', entries = users)
 
@@ -219,17 +243,23 @@ def activate():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
 	error = None
+
 	if request.method == 'POST':
-		ret = check_password(request.form['username'], request.form['password'])
-		if ret == 'passed':
-			session['logged_in'] = True
-			session['user'] = request.form['username']
-			flash('You were logged in')
-			return redirect(url_for('show_entries'))
-		elif ret == 'badusernm':
-			error = 'Invalid username'
-		elif ret == 'badpasswd':
-			error = 'Invalid password'
+
+		user = User.query.filter_by(email=request.form['username']).first()
+		
+		if user is not None:
+			ret = user.check_password(request.form['password'])
+			if ret == True:
+				session['logged_in'] = True
+				session['user'] = user.email
+				flash('You were logged in')
+				return redirect(url_for('show_entries'))
+			else:
+				error = "Invalid password"
+		else:
+			error = "Invalid email"
+
 	if 'logged_in' in session and session['logged_in'] == True:
 		return redirect(url_for('show_entries'))
 	else:
@@ -238,11 +268,34 @@ def login():
 @app.route('/logout')
 def logout():
 	session.pop('logged_in', None)
+	session.pop('user', None)
 	flash('You were logged out')
 	return redirect(url_for('show_entries'))
 
 if __name__ == '__main__':
+	init_dbs()
 	
-	init_db()
-	# populate()
+	u = User('bmahlbrand@gmail.com', 'abc123', 'ben', 'ahlbrand', 'profile.png')
+	db_session().add(u)
+	u = User('george@gmail.com','abc123','George','Constanza', '')
+	db_session().add(u)
+	u = User('mary@gmail.com','mary123', 'Mary', 'Lamb',  '')
+	db_session().add(u)
+	u = User('peter@gmail.com','peter123','Peter','Piper', '')
+	db_session().add(u)
+	
+	db_session().commit()
+
+	s = Subscription('bmahlbrand@gmail.com', 'george@gmail.com')
+	db_session.add(s)
+	s = Subscription('bmahlbrand@gmail.com', 'mary@gmail.com')
+	db_session.add(s)
+	s = Subscription('bmahlbrand@gmail.com', 'peter@gmail.com')
+	db_session.add(s)
+
+	s = Subscription('george@gmail.com', 'mary@gmail.com')
+	db_session.add(s)
+	s = Subscription('george@gmail.com', 'peter@gmail.com')
+	db_session.add(s)
+	db_session().commit()
 	app.run()

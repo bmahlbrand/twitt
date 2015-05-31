@@ -2,9 +2,10 @@ from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from database import Base
 from werkzeug import generate_password_hash, check_password_hash
 from sqlalchemy.orm import relationship, backref
+
 class User(Base):
 	__tablename__ = 'users'
-	id = Column(Integer)
+
 	email = Column(String, primary_key = True)
 	pw_hash = Column(String)
 	first_name = Column(String)
@@ -27,7 +28,7 @@ class User(Base):
 		self.first_name = first_name
 		self.last_name = last_name
 		self.profilepic_path = profilepic_path
-		self.activated = 0
+		self.activated = 1
 
 	def __repr__(self):
 		return "<User(email = '%s', pw_hash = '%s', first_name = '%s', last_name = '%s', profilepic_path = '%s', activated = '%d')>" % (self.email, self.pw_hash, self.first_name, self.last_name, self.profilepic_path, self.activated)
@@ -42,20 +43,11 @@ class User(Base):
 	# def __hash__(self):
 		# return hash(self)
 
-	def printit(self):
-		print(type(self.email))
-		print(type(self.pw_hash))
-		print(type(self.first_name))
-		print(type(self.last_name))
-		print(type(self.profilepic_path))
-		print(type(self.activated))
-
-
 	def set_password(self, password):
 		self.pw_hash = generate_password_hash(password)
 
 	def check_password(self, password):
-		return check_password_hash(self.pw_hash, password)
+		return check_password_hash(self.pw_hash, password) and self.activated is 1
 
 class Tweet(Base):
 	__tablename__ = 'tweets'

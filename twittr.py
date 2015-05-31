@@ -10,7 +10,7 @@ import smtplib
 from email.mime.text import MIMEText
 
 from models import User, Tweet, Subscription
-
+from populate import populate
 ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
 
 app = Flask(__name__)
@@ -100,8 +100,8 @@ def add_entry():
 		abort(401)
 
 	tweet = Tweet(session.get('user'), request.form['text'], datetime.now(), None)
-	database.db_session().add(tweet)
-	database.db_session().commit()
+	db_session().add(tweet)
+	db_session().commit()
 
 	flash('New entry was successfully posted')
 	return redirect(url_for('show_entries'))
@@ -136,8 +136,8 @@ def create_account():
 					request.form['last_name'], 
 					request.form['profilepic_path'])
 
-			database.db_session().add(u)
-			database.db_session().commit()
+			db_session().add(u)
+			db_session().commit()
 
 			flash('successfully created new account')
 			create_user_email(request.form['email'])
@@ -185,15 +185,15 @@ def subscribe():
 		
 		s = Subscription(username, subscribee)
 
-		database.db_session().add(s)
-		database.db_session().commit()
+		db_session().add(s)
+		db_session().commit()
 		
 		flash('You subscribed!')
 		return redirect(url_for('manage_account'))
 	elif request.method == 'GET':
 
 		subscribed_users = [result.subscribed_user for result in Subscription.query.filter_by(email_id = session.get('user')).all()]
-		rv = database.db_session().query(User).filter(User.email != session.get('user')).all()
+		rv = db_session().query(User).filter(User.email != session.get('user')).all()
 
 		results = []
 		for row in rv:
@@ -212,14 +212,14 @@ def unsubscribe():
 
 		s = Subscription.query.filter(Subscription.email_id == username,
 		 								Subscription.subscribed_user == subscribee).first()
-		database.db_session().delete(s)
-		database.db_session().commit()
+		db_session().delete(s)
+		db_session().commit()
 
 		flash('You unsubscribed!')
 		return redirect(url_for('manage_account'))
 	elif request.method == 'GET':
 		subscribed_users = [result.subscribed_user for result in Subscription.query.filter_by(email_id = session.get('user')).all()]
-		rv = database.db_session().query(User).filter(User.email != session.get('user')).all()
+		rv = db_session().query(User).filter(User.email != session.get('user')).all()
 
 		results = []
 
@@ -274,28 +274,5 @@ def logout():
 
 if __name__ == '__main__':
 	init_dbs()
-	
-	u = User('bmahlbrand@gmail.com', 'abc123', 'ben', 'ahlbrand', 'profile.png')
-	db_session().add(u)
-	u = User('george@gmail.com','abc123','George','Constanza', '')
-	db_session().add(u)
-	u = User('mary@gmail.com','mary123', 'Mary', 'Lamb',  '')
-	db_session().add(u)
-	u = User('peter@gmail.com','peter123','Peter','Piper', '')
-	db_session().add(u)
-	
-	db_session().commit()
-
-	s = Subscription('bmahlbrand@gmail.com', 'george@gmail.com')
-	db_session.add(s)
-	s = Subscription('bmahlbrand@gmail.com', 'mary@gmail.com')
-	db_session.add(s)
-	s = Subscription('bmahlbrand@gmail.com', 'peter@gmail.com')
-	db_session.add(s)
-
-	s = Subscription('george@gmail.com', 'mary@gmail.com')
-	db_session.add(s)
-	s = Subscription('george@gmail.com', 'peter@gmail.com')
-	db_session.add(s)
-	db_session().commit()
+	populate()
 	app.run()

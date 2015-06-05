@@ -15,5 +15,5 @@ def init_dbs():
 	# you will have to import them first before calling init_db()
 	import models
 
-	Base.metadata.drop_all(bind=engine)
+	# Base.metadata.drop_all(bind=engine)
 	Base.metadata.create_all(bind=engine)

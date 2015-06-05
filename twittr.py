@@ -5,7 +5,7 @@ from flask import Flask, request, session, g, redirect, url_for, abort, render_t
 from werkzeug import generate_password_hash, check_password_hash, secure_filename
 from datetime import datetime
 from contextlib import closing
-
+from os.path import basename
 import smtplib 
 from email.mime.text import MIMEText
 
@@ -24,8 +24,12 @@ from database import db_session, init_dbs
 
 @app.teardown_appcontext
 def shutdown_session(exception = None):
-    db_session.remove()
+	db_session.remove()
 
+# @app.before_request
+# def check_valid_login():
+# 	if (request.endpoint and 'static' not in request.endpoint and not login_valid and not getattr(app.view_functions[request.endpoint], 'is_public', False)):
+# 		return render_template('login.html', next=request.endpoint)
 # def connect_db():
 # 	return sqlite3.connect(app.config['DATABASE'])
 
@@ -63,36 +67,32 @@ from flask import send_from_directory
 
 @app.route('/favicon.ico')
 def favicon():
-    return send_from_directory(os.path.join(app.root_path, 'static'),
-                               'favicon.ico', mimetype='image/vnd.microsoft.icon')
+	return send_from_directory(os.path.join(app.root_path, 'static'),
+							   'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+	return '.' in filename and \
+		   filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
-@app.route('/upload', methods=['GET', 'POST'])
-def upload_file():
-    if request.method == 'POST':
-        file = request.files['file']
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            return redirect(url_for('uploaded_file', filename=filename))
-    return '''
-    <!doctype html>
-    <title>Upload new File</title>
-    <h1>Upload new File</h1>
-    <form action="" method=post enctype=multipart/form-data>
-      <p><input type=file name=file>
-         <input type=submit value=Upload>
-    </form>
-    '''
+def upload_file(profilepic):
+	file = profilepic
+	if file and allowed_file(file.filename):
+		filename = secure_filename(file.filename)
+		file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+		# return redirect(url_for('show_entries', filename=filename))
+
 
 @app.route('/')
 def show_entries():
-	results = Tweet.query.filter_by(owner = session.get('user')).all()
-	tweets = [dict(owner = tweet.owner, text = tweet.text, timestamp = tweet.timestamp) for tweet in Tweet.query.filter_by(owner = session.get('user')).all()]
-	return render_template('show_entries.html', entries = tweets)
+	results = []
+	subscriptions = Subscription.query.filter_by(email_id = session.get('user')).all()
+
+	for user in subscriptions:
+		tweets = Tweet.query.filter_by(owner = user.subscribed_user).all()
+		results += tweets
+
+	entries = [dict(owner = tweet.owner, text = tweet.text, timestamp = tweet.timestamp) for tweet in results]
+	return render_template('show_entries.html', entries = entries)
 
 @app.route('/add', methods=['POST'])
 def add_entry():
@@ -128,21 +128,23 @@ def create_account():
 	error = None
 	if request.method == 'POST':
 		user = User.query.filter_by(email = request.form['email']).first()
-
 		if user is None:
 			u = User(request.form['email'], 
 					request.form['password'], 
 					request.form['first_name'],
 					request.form['last_name'], 
-					request.form['profilepic_path'])
+					request.files['profilepic'].filename)
 
+			upload_file(request.files['profilepic'])
 			db_session().add(u)
 			db_session().commit()
 
 			flash('successfully created new account')
-			create_user_email(request.form['email'])
 
-			return render_template('login.html')
+			if app.config['EMAIL_ENABLED']:
+				create_user_email(request.form['email'])
+
+			return render_template('login.html', error = error)
 		else:
 			error = 'user exists'
 
@@ -152,7 +154,26 @@ def create_account():
 def manage_account():
 	error = None
 	return render_template('manage_account.html', error = error)
+
+@app.route('/change_profilepic', methods=['GET', 'POST'])
+def change_profilepic():
+	error = None
+
+	if request.method == 'POST':
+		user = User.query.filter_by(email=session.get('user')).first() # .update(dict(profilepic=request.files['profilepic'].filename))
 	
+		user.profilepic = request.files['profilepic'].filename
+
+		db_session().commit()
+		
+		print(user)
+		upload_file(request.files['profilepic'])
+		flash('successfully changed profile picture!')
+		return redirect(url_for('manage_account'))
+	else:
+		return render_template('change_profilepic.html', error = error)
+
+
 @app.route('/change_password', methods=['GET', 'POST'])
 def change_password():
 	error = None
@@ -200,7 +221,7 @@ def subscribe():
 			if row.email not in subscribed_users:
 				results.append(row)
 
-		users = [dict(email = row.email, first_name = row.first_name, last_name = row.last_name, profilepic_path = row.profilepic_path)  for row in results]
+		users = [dict(email = row.email, first_name = row.first_name, last_name = row.last_name, profilepic = row.profilepic)  for row in results]
 		return render_template('subscribe.html', entries = users)
 
 @app.route('/unsubscribe', methods=['GET', 'POST'])
@@ -211,7 +232,7 @@ def unsubscribe():
 		subscribee = request.form['subscribee']
 
 		s = Subscription.query.filter(Subscription.email_id == username,
-		 								Subscription.subscribed_user == subscribee).first()
+										Subscription.subscribed_user == subscribee).first()
 		db_session().delete(s)
 		db_session().commit()
 
@@ -227,7 +248,7 @@ def unsubscribe():
 			if row.email in subscribed_users:
 				results.append(row)
 
-		users = [dict(email = row.email, first_name = row.first_name, last_name = row.last_name, profilepic_path = row.profilepic_path)  for row in results]
+		users = [dict(email = row.email, first_name = row.first_name, last_name = row.last_name, profilepic = row.profilepic)  for row in results]
 
 		return render_template('unsubscribe.html', entries = users)
 
@@ -274,5 +295,7 @@ def logout():
 
 if __name__ == '__main__':
 	init_dbs()
-	populate()
+	# print(User.query.all())
+	# print(Subscription.query.all())
+	# populate()
 	app.run()

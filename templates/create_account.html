@@ -4,13 +4,13 @@
 <H3>Fill in the following:</H3>
 {% if error %}<p class=error><strong>Error:</strong> {{ error }}{% endif %}
 
-<form action="{{ url_for('create_account') }}" method=post>
+<form action="{{ url_for('create_account') }}" method=post enctype="multipart/form-data">
 	<dl>
 		<dt>Email:<dd><input type=text name="email">
 		<dt>Password:<dd><input type=password name="password">
 		<dt>First Name:<dd><input type=text name="first_name">
 		<dt>Last Name:<dd><input type=text name="last_name">
-		<dt>Profile picture:<dd><input type=file name="profilepic_path">
+		<dt>Profile picture:<dd><input type=file name="profilepic">
 	</dl>
 	<input type=submit value="submit">
 </form>

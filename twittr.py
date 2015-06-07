@@ -12,7 +12,7 @@ from email.mime.text import MIMEText
 from models import User, Tweet, Subscription
 from populate import populate
 ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
-
+IMAGEPATH = "IMAGES"
 app = Flask(__name__)
 app.config.from_pyfile('conf.cfg', silent = True)
 
@@ -75,10 +75,15 @@ def allowed_file(filename):
 		   filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 def upload_file(profilepic):
+	filepath = app.config['UPLOAD_FOLDER'] + "/" + session.get('user') + "/"
+	
+	if not os.path.exists(filepath):
+		os.makedirs(filepath)
+
 	file = profilepic
 	if file and allowed_file(file.filename):
 		filename = secure_filename(file.filename)
-		file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+		file.save(os.path.join(app.config['UPLOAD_FOLDER'] + "/" + session.get('user'), filename))
 		# return redirect(url_for('show_entries', filename=filename))
 
 

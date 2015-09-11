@@ -111,22 +111,6 @@ def add_entry():
 	flash('New entry was successfully posted')
 	return redirect(url_for('show_entries'))
 
-def create_user_email(email):
-	body =  """
-			To complete setting up your account, please click the following link to confirm your email is valid:
-			"http://data.cs.purdue.edu:8892/petetwitt/validate.cgi?action=activate&email={0}"
-			""".format(email)
-
-	msg = MIMEText(body)
-
-	msg['Subject'] = 'Validate your PeteTwitt account' #% registration_confirmation
-	msg['From'] = app.config['MAIL_USERNAME']
-	msg['To'] = email
-
-	s = smtplib.SMTP_SSL(app.config['MAIL_SERVER'], app.config['MAIL_PORT'])
-	s.login(app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'])
-	s.sendmail(app.config['MAIL_USERNAME'], [email], msg.as_string())
-	s.quit()
 
 @app.route('/create_account', methods=['GET', 'POST'])
 def create_account():
@@ -147,7 +131,7 @@ def create_account():
 			flash('successfully created new account')
 
 			if app.config['EMAIL_ENABLED']:
-				create_user_email(request.form['email'])
+				u.create_user_email(request.form['email'])
 
 			return render_template('login.html', error = error)
 		else:
